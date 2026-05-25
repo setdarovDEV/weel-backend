@@ -1,14 +1,26 @@
-# Render.yaml for Weel Backend
-# Set the following environment variables in the Render dashboard:
-#   DATABASE_URL
-#   SYNC_DATABASE_URL
-#   REDIS_URL
-#   MINIO_ENDPOINT
-#   CORS_ORIGINS
-
 services:
   - type: web
-    path: ./ 
+    name: weel-backend
+    runtime: docker
+    repo: https://github.com/setdarovDEV/weel-backend
+    region: frankfurt
+    plan: free
+    branch: main
     dockerfilePath: ./Dockerfile
-    command: >
-      sh -c "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SYNC_DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: MINIO_ENDPOINT
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
