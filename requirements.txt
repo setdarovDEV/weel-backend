@@ -208,7 +208,7 @@ python-magic==0.4.27
 python-memcached==1.58
 python-telegram-bot==22.7
 pytz==2026.1.post1
-pyxdg==0.28
+
 pyxlsb==1.0.10
 PyYAML==6.0.3
 RapidFuzz==3.14.3
