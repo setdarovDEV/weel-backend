@@ -56,3 +56,18 @@ class DistrictPrefecture(Base):
 
     district_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("district.id", ondelete="CASCADE"), primary_key=True)
     prefecture_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("prefecture.id", ondelete="CASCADE"), primary_key=True)
+
+
+class Location(Base):
+    __tablename__ = "location"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    guid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, unique=True)
+    type: Mapped[str] = mapped_column(String(20), nullable=False)
+    parent_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("location.id"), nullable=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    img_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    region_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+
+    parent: Mapped[Optional["Location"]] = relationship("Location", remote_side="Location.id", back_populates="children", lazy="selectin")
+    children: Mapped[List["Location"]] = relationship("Location", back_populates="parent", lazy="selectin")

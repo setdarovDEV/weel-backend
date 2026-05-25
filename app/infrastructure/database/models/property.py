@@ -148,3 +148,90 @@ class PropertyMap(Base):
     property_type: Mapped[str] = mapped_column(Text, nullable=False)
     target_table: Mapped[str] = mapped_column(Text, nullable=False)
     target_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+
+
+class PropertyType(Base):
+    __tablename__ = "property_type"
+
+    guid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    slug: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+
+
+class PropertyService(Base):
+    __tablename__ = "property_service"
+
+    guid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    property_type_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("property_type.guid"), nullable=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    icon_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
+
+class PropertyImage(Base):
+    __tablename__ = "property_image"
+
+    guid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    property_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("property.guid"), nullable=False)
+    image_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class PropertyServiceLink(Base):
+    __tablename__ = "property_service_link"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    property_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("property.guid"), nullable=False)
+    service_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("property_service.guid"), nullable=False)
+
+    service: Mapped["PropertyService"] = relationship("PropertyService", lazy="selectin")
+
+
+class PropertyPrice(Base):
+    __tablename__ = "property_price"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    property_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("property.guid"), nullable=False)
+    month_from: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    month_to: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    price_per_person: Mapped[Optional[Decimal]] = mapped_column(Numeric(12, 2), nullable=True)
+    price_on_working_days: Mapped[Optional[Decimal]] = mapped_column(Numeric(12, 2), nullable=True)
+    price_on_weekends: Mapped[Optional[Decimal]] = mapped_column(Numeric(12, 2), nullable=True)
+
+
+class Property(Base):
+    __tablename__ = "property"
+
+    guid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    legacy_property_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    is_verified: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    verification_status: Mapped[Optional[str]] = mapped_column(String(20), default="waiting")
+    is_archived: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    is_recommended: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    comment_count: Mapped[Optional[int]] = mapped_column(Integer, default=0)
+    price: Mapped[Optional[Decimal]] = mapped_column(Numeric(12, 2), nullable=True)
+    currency: Mapped[Optional[str]] = mapped_column(String(3), default="USD")
+    img: Mapped[Optional[list[str]]] = mapped_column(ARRAY(Text), nullable=True)
+    partner_user_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    latitude: Mapped[Optional[Decimal]] = mapped_column(Numeric(17, 14), nullable=True)
+    longitude: Mapped[Optional[Decimal]] = mapped_column(Numeric(17, 14), nullable=True)
+    city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    region_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    district_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    prefecture_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    guests: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    bedrooms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    beds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    bathrooms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    is_allowed_alcohol: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    property_type_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("property_type.guid"), nullable=True)
+
+    location_ref: Mapped[Optional["Location"]] = relationship("Location", lazy="selectin", viewonly=True)
+    images: Mapped[List["PropertyImage"]] = relationship("PropertyImage", backref="property", lazy="selectin")
+    prices: Mapped[List["PropertyPrice"]] = relationship("PropertyPrice", backref="property", lazy="selectin")
+    property_type: Mapped[Optional["PropertyType"]] = relationship("PropertyType", lazy="selectin")
+    service_links: Mapped[List["PropertyServiceLink"]] = relationship("PropertyServiceLink", backref="property", lazy="selectin")
