@@ -1,6 +1,6 @@
 import logging
 
-from telegram import BotCommand, MenuButtonWebApp, Update, WebAppInfo
+from telegram import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, MenuButtonWebApp, Update, WebAppInfo
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 logger = logging.getLogger(__name__)
@@ -22,8 +22,13 @@ class TelegramBot:
     async def _start_command(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
+        keyboard = [
+            [InlineKeyboardButton("🚀 Dasturni ochish", url=self.web_app_url)]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            "Weel bot ishga tushdi! Quyidagi tugma orqali ilovani oching 👇"
+            "Weel bot ishga tushdi! Quyidagi tugma orqali ilovani oching 👇",
+            reply_markup=reply_markup,
         )
 
     async def _set_menu_button(self) -> None:

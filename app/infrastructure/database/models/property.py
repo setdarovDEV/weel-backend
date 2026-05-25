@@ -230,7 +230,7 @@ class Property(Base):
     is_allowed_alcohol: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     property_type_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("property_type.guid"), nullable=True)
 
-    location_ref: Mapped[Optional["Location"]] = relationship("Location", lazy="selectin", viewonly=True)
+    location_ref: Mapped[Optional["Location"]] = relationship("Location", lazy="selectin", viewonly=True, primaryjoin="Property.region_id==Location.region_id")
     images: Mapped[List["PropertyImage"]] = relationship("PropertyImage", backref="property", lazy="selectin")
     prices: Mapped[List["PropertyPrice"]] = relationship("PropertyPrice", backref="property", lazy="selectin")
     property_type: Mapped[Optional["PropertyType"]] = relationship("PropertyType", lazy="selectin")
