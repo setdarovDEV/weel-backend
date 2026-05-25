@@ -5,7 +5,7 @@ from sqlalchemy import select, and_, or_, func
 from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.dependencies import get_current_user, get_current_partner
-from app.models.user import User, Partner
+from app.models.user import User
 from app.models.location import Location
 from app.models.property import (
     PropertyType, PropertyService, Property,
