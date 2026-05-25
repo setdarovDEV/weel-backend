@@ -37,6 +37,15 @@ if settings.sentry_dsn:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Auto-create tables on startup (idempotent - safe for existing databases)
+    try:
+        from app.infrastructure.database.connection import create_engine, Base
+        async with create_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables ensured")
+    except Exception as e:
+        logger.warning(f"Could not ensure database tables: {e}")
+
     if settings.bot_token:
         from app.infrastructure.telegram.bot import TelegramBot
 
@@ -102,6 +111,16 @@ async def domain_exception_handler(request: Request, exc: DomainException):
     return JSONResponse(
         status_code=status_code,
         content={"detail": exc.message, "code": exc.code},
+    )
+
+
+# Catch-all exception handler to ensure CORS headers on unexpected errors
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "code": "INTERNAL_ERROR"},
     )
 
 

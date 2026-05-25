@@ -68,6 +68,7 @@ def _build_location_response(p: Property):
 # ==================== PROPERTY TYPES ====================
 
 @router.get("/types/", response_model=List[PropertyTypeResponse])
+@router.get("/categories/", response_model=List[PropertyTypeResponse])
 async def get_property_types(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PropertyType))
     types = result.scalars().all()
@@ -539,20 +540,30 @@ async def delete_property_image(
 
 @router.get("/recommendations/", response_model=List[PropertyListItem])
 async def get_recommendations(
+    type: Optional[str] = Query(None, description="Filter by recommendation type: featured, best-by-reviews, most-booked"),
     limit: int = Query(10, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
     query = select(Property).where(
-        and_(
-            Property.verification_status == VerificationStatus.VERIFIED.value,
-            Property.is_recommended == True,
-        )
+        Property.verification_status == VerificationStatus.VERIFIED.value,
     ).options(
         selectinload(Property.location_ref),
         selectinload(Property.images),
         selectinload(Property.prices),
         selectinload(Property.property_type),
-    ).limit(limit)
+    )
+
+    if type == "featured":
+        query = query.where(Property.is_recommended == True)
+    elif type == "best-by-reviews":
+        query = query.order_by(Property.comment_count.desc())
+    elif type == "most-booked":
+        # Fallback to newest properties until we have booking stats
+        query = query.order_by(Property.created_at.desc())
+    else:
+        query = query.where(Property.is_recommended == True)
+
+    query = query.limit(limit)
 
     result = await db.execute(query)
     properties = result.scalars().all()
